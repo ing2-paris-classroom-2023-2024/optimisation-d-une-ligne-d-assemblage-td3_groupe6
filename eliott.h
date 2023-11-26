@@ -16,6 +16,8 @@ typedef struct station {
     int val_station;
     int marquage;
     int *tab_operations;
+    int nb_operations;
+    int degre;
     t_arc *voisins;
     int couleur;
 }t_station;
@@ -27,7 +29,6 @@ typedef struct graphe {
     int nb_stations;
     int *sous_sommets;
     int num_operation_max;
-    int nombre_stations;
     int *tab_perations_reelles;
     int nb_paires_exclusion;
 }t_graphe;
@@ -44,8 +45,9 @@ void graphe_afficher(t_graphe* graphe);
 t_graphe *creer_graphe(int op_max);
 void ColorationGlouton(t_graphe* graphe);
 void DFS(t_graphe *un_graphe, t_graphe * sous_graphe, int s);
-int coloration(t_graphe *un_graphe);
+int nb_mini_stations_exclu(t_graphe *un_graphe);
 int* creation_tab_op_reelles(char *nom_fichier, t_graphe* un_graphe);
+void Affichage_stations(t_graphe* un_graphe);
 
 
 #endif //OPTIMISATION_D_UNE_LIGNE_D_ASSEMBLAGE_TD3_GROUPE6_ELIOTT_H

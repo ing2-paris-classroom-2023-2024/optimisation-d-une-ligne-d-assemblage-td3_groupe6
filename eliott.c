@@ -67,7 +67,7 @@ t_graphe* gestion_donnees_graphe(int nb_operations, int op_max,char* file_name){
     un_graphe->ordre_sous_graphe = 0;
     un_graphe->num_operation_max = op_max;
     un_graphe->tab_stations = malloc((op_max + 1) * sizeof (t_station*));
-    un_graphe->nombre_stations = 0;
+    un_graphe->nb_stations = 0;
     un_graphe->nb_paires_exclusion = 0;
     un_graphe->matrice_exclusions = malloc((op_max  + 1) * sizeof(int*));
 
@@ -110,6 +110,8 @@ t_graphe *creer_graphe(int op_max){
         nv_graphe->tab_stations[i]->val_station = i;
         nv_graphe->tab_stations[i]->couleur = 0;
         nv_graphe->tab_stations[i]->marquage = 0;
+        nv_graphe->tab_stations[i]->degre = 0;
+        nv_graphe->tab_stations[i]->nb_operations = 0;
     }
 
     return nv_graphe;
@@ -149,7 +151,9 @@ t_graphe* fichier_exclusion(char* nom_fichier,t_graphe *un_graphe){
 
     while(fscanf(fichier, "%d %d", &entier1, &entier2) == 2){
         un_graphe->tab_stations = CreerArete(un_graphe->tab_stations, entier2, entier1);
+        un_graphe->tab_stations[entier2]->degre++;
         un_graphe->tab_stations = CreerArete(un_graphe->tab_stations, entier1, entier2);
+        un_graphe->tab_stations[entier1]->degre++;
         nb_exclu++;
     }
 
@@ -197,20 +201,75 @@ t_station** CreerArete(t_station** tab_stations, int station_1, int station_2)
     }
 }
 
-t_graphe *creation_graphe_stations(t_graphe* un_graphe){
+t_graphe *init_graphe_station(int nb_stations){
+    t_graphe *nv_graphe = malloc(sizeof(t_graphe));
 
-    for(int i = 0; i < un_graphe->nombre_stations - 1;i++){
-        un_graphe->tab_stations = CreerArete(un_graphe->tab_stations, un_graphe->tab_stations[i]->val_station,
-                                             un_graphe->tab_stations[i + 1]->val_station);
+    if(nv_graphe == NULL){
+        printf("erreur alloc init graphe\n");
+        exit(1);
     }
 
-    printf("\ntab colo fonction : \n");
-    /*for(int i = 0; i < un_graphe->num_operation_max + 1;i++){
-        printf("[%d]", un_graphe->tab_coloration[i]);
-    }*/
+    nv_graphe->nb_stations = nb_stations;
+    nv_graphe->tab_stations = malloc(nb_stations * sizeof(t_station*));
+
+    for(int i = 0; i < nv_graphe->nb_stations;i++){
+        nv_graphe->tab_stations[i] = malloc(sizeof(t_station));
+        nv_graphe->tab_stations[i]->voisins = NULL;
+        nv_graphe->tab_stations[i]->val_station = i;
+        nv_graphe->tab_stations[i]->nb_operations = 0;
+    }
+
+    return nv_graphe;
+
+}
+
+t_graphe *creation_graphe_stations(t_graphe* graphe_exclusion){
 
 
-    return un_graphe;
+    t_graphe *graphe_stations = init_graphe_station(graphe_exclusion->nb_stations);
+    graphe_stations->num_operation_max = graphe_exclusion->num_operation_max;
+
+    for(int i = 0; i < graphe_stations->nb_stations;i++){
+        graphe_stations->tab_stations[i]->tab_operations = malloc(graphe_exclusion->num_operation_max * sizeof(int));
+        for(int j = 0; j < graphe_exclusion->num_operation_max;j++){
+
+            if(j == 0)
+                continue;
+
+            if(graphe_exclusion->tab_stations[j]->couleur == i){
+                graphe_stations->tab_stations[i]->nb_operations++;
+            }
+        }
+    }
+
+    for(int i = 0; i < graphe_stations->nb_stations;i++){
+        for(int j = 0; j < graphe_exclusion->num_operation_max;j++){
+            graphe_stations->tab_stations[i]->tab_operations[j] = -1;
+        }
+    }
+
+    for(int i = 0; i < graphe_stations->nb_stations;i++){
+        for(int j = 0; j < graphe_exclusion->num_operation_max;j++){
+
+            if(j == 0)
+                continue;
+
+            if(graphe_exclusion->tab_stations[j]->couleur == i){
+                graphe_stations->tab_stations[i]->tab_operations[j] = j;
+            }
+        }
+    }
+
+    int i = 0;
+
+    while(i < graphe_stations->nb_stations - 1){
+        graphe_stations->tab_stations = CreerArete(graphe_stations->tab_stations, i, i + 1);
+        i++;
+    }
+
+    Affichage_stations(graphe_stations);
+
+    return graphe_stations;
 }
 
 void afficher_successeurs(t_station** sommet, int num)
@@ -229,10 +288,6 @@ void afficher_successeurs(t_station** sommet, int num)
 
 void graphe_afficher(t_graphe* graphe)
 {
-    printf("graphe\n");
-
-    printf("ordre = %d\n",graphe->nombre_stations);
-
     printf("listes d'adjacence :\n");
 
     for (int i=0; i < graphe->num_operation_max; i++)
@@ -242,41 +297,85 @@ void graphe_afficher(t_graphe* graphe)
     }
 }
 
+void Affichage_stations(t_graphe* un_graphe){
+    printf("\n-----------------------Graphe de stations-----------------------\n");
+
+    for(int i = 0; i < un_graphe->nb_stations;i++){
+        t_arc *temp = un_graphe->tab_stations[i]->voisins;
+        printf("station %d : \n", i);
+        printf("reliee vers station : ");
+
+        if(temp == NULL)
+            printf("station de fin\n");
+
+        while(temp != NULL){
+            printf("%d",temp->num_station);
+            temp = temp->arc_suivant;
+        }
+
+        printf("\noperations executees : ");
+        for(int j = 0; j < un_graphe->num_operation_max;j++){
+            if(un_graphe->tab_stations[i]->tab_operations[j] > 0)
+                printf("[%d]", un_graphe->tab_stations[i]->tab_operations[j]);
+        }
+        printf("\n\n");
+    }
+}
+
 void DFS(t_graphe *un_graphe, t_graphe * sous_graphe, int s){
 
     if(un_graphe->tab_stations[s]->marquage == 0){///si le sommet est pas découvert alors on affiche son numéro et on le marque
-        //printf("%d ", un_graphe->tab_sommet[s]->valeur_sommet);
-        //un_graphe->sous_sommets[s] = un_graphe->tab_sommet[s]->valeur_sommet;
         un_graphe->ordre_sous_graphe++;
-        sous_graphe->tab_stations[s] = un_graphe->tab_stations[s];
         un_graphe->tab_stations[s]->marquage = 1;
+        sous_graphe->tab_stations[s] = un_graphe->tab_stations[s];
 
         t_arc* Temparc = un_graphe->tab_stations[s]->voisins;///on accède à un sommet adjacent de notre sommet
 
         while(Temparc!=NULL){
             DFS(un_graphe, sous_graphe,Temparc->num_station);///appel récrusif de DSF depuis le sommet adjacent de notre sommet précédent
-            //printf("%d temp\n",Temparc->sommet);
             Temparc = Temparc->arc_suivant;///on passe au sommet adjacent suivant
         }
     }
 }
 
 void ColorationGlouton(t_graphe* graphe){
-    for (int i = 0; i < graphe->num_operation_max; i++) {
-        t_station * sommet = graphe->tab_stations[i];
+    // Créer un tableau d'indices pour représenter l'ordre des sommets
+    int* indices = (int*)malloc(graphe->num_operation_max * sizeof(int));
+    for(int i = 0; i < graphe->num_operation_max; i++){
+        indices[i] = i;
+    }
+
+    // Trie les indices par degré décroissant
+    for(int i = 0; i < graphe->num_operation_max; i++){
+        for (int j = i + 1; j < graphe->num_operation_max; j++){
+            if(graphe->tab_stations[indices[j]]->degre > graphe->tab_stations[indices[i]]->degre){
+                int temp = indices[i];
+                indices[i] = indices[j];
+                indices[j] = temp;
+            }
+        }
+    }
+
+    // Coloration gloutonne
+    for(int i = 0; i < graphe->num_operation_max; i++){
+        t_station* sommet = graphe->tab_stations[indices[i]];
         int couleur_disponible = 0;
 
         // Trouver la première couleur disponible
-        while (1) {
+        while(1){
             int couleur_valide = 1;
-            for (t_arc* arc = sommet->voisins; arc != NULL; arc = arc->arc_suivant) {
-                if (graphe->tab_stations[arc->num_station]->couleur == couleur_disponible) {
+            t_arc* voisin = sommet->voisins;
+
+            // Vérifier les couleurs des voisins
+            while(voisin != NULL){
+                if(graphe->tab_stations[voisin->num_station]->couleur == couleur_disponible) {
                     couleur_valide = 0;
                     break;
                 }
+                voisin = voisin->arc_suivant;
             }
 
-            if (couleur_valide) {
+            if(couleur_valide){
                 sommet->couleur = couleur_disponible;
                 break;
             }
@@ -284,9 +383,12 @@ void ColorationGlouton(t_graphe* graphe){
             couleur_disponible++;
         }
     }
+
+    // Libérer la mémoire allouée pour le tableau d'indices
+    free(indices);
 }
 
-int coloration(t_graphe *un_graphe){
+int nb_mini_stations_exclu(t_graphe *un_graphe){
 
     t_graphe *sous_graphe;
     int nb_stations = 0;
@@ -300,11 +402,16 @@ int coloration(t_graphe *un_graphe){
             un_graphe->sous_sommets[i] = -1;
         }
 
-        if(un_graphe->tab_stations[c]->couleur == 1 || un_graphe->tab_perations_reelles[c] < 0)
+        if(un_graphe->tab_stations[c]->marquage == 1 || un_graphe->tab_perations_reelles[c] < 0 || un_graphe->tab_stations[c]->voisins == NULL)
             continue;
 
-        else{
-            DFS(un_graphe, sous_graphe,c);
+        else {
+            DFS(un_graphe, sous_graphe, c);
+
+            for (int i = 0; i < un_graphe->num_operation_max; i++) {
+                sous_graphe->tab_stations[i]->marquage = un_graphe->tab_stations[i]->marquage;
+            }
+
             ColorationGlouton(sous_graphe);
         }
     }
