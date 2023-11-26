@@ -267,8 +267,6 @@ t_graphe *creation_graphe_stations(t_graphe* graphe_exclusion){
         i++;
     }
 
-    Affichage_stations(graphe_stations);
-
     return graphe_stations;
 }
 
@@ -306,7 +304,7 @@ void Affichage_stations(t_graphe* un_graphe){
         printf("reliee vers station : ");
 
         if(temp == NULL)
-            printf("station de fin\n");
+            printf("station de fin");
 
         while(temp != NULL){
             printf("%d",temp->num_station);
@@ -423,5 +421,31 @@ int nb_mini_stations_exclu(t_graphe *un_graphe){
     }
 
     return nb_stations + 1;
+}
+
+void liberation_memoire_graphe_stations(t_graphe *un_graphe){
+
+    for(int i = 0; i < un_graphe->nb_stations;i++){
+        un_graphe->tab_stations[i]->tab_operations = NULL;
+        free(un_graphe->tab_stations[i]->voisins);
+        free(un_graphe->tab_stations[i]);
+    }
+
+    un_graphe->matrice_exclusions = NULL;
+    free(un_graphe->tab_stations);
+    free(un_graphe);
+}
+
+void libeartion_memoire_graphe_contraintes(t_graphe *un_graphe){
+    for(int i = 0; i < un_graphe->num_operation_max;i++){
+        un_graphe->tab_stations[i]->tab_operations = NULL;
+        un_graphe->tab_stations[i]->voisins = NULL;
+        free(un_graphe->tab_stations[i]);
+    }
+
+    un_graphe->matrice_exclusions = NULL;
+    free(un_graphe->sous_sommets);
+    free(un_graphe->tab_stations);
+    free(un_graphe);
 }
 

@@ -48,6 +48,9 @@ void DFS(t_graphe *un_graphe, t_graphe * sous_graphe, int s);
 int nb_mini_stations_exclu(t_graphe *un_graphe);
 int* creation_tab_op_reelles(char *nom_fichier, t_graphe* un_graphe);
 void Affichage_stations(t_graphe* un_graphe);
+void liberation_memoire_graphe_stations(t_graphe *un_graphe);
+void libeartion_memoire_graphe_contraintes(t_graphe *un_graphe);
+t_graphe *init_graphe_station(int nb_stations);
 
 
 #endif //OPTIMISATION_D_UNE_LIGNE_D_ASSEMBLAGE_TD3_GROUPE6_ELIOTT_H

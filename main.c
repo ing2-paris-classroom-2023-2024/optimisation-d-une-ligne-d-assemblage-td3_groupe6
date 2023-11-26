@@ -24,7 +24,13 @@ int main(void){
     printf("graphe d'exclusion\n");
     graphe_afficher(un_graphe);*/
 
-    creation_graphe_stations(un_graphe);
+    t_graphe * stations = creation_graphe_stations(un_graphe);
+
+    Affichage_stations(stations);
+
+    free(un_graphe->tab_perations_reelles);
+    liberation_memoire_graphe_stations(stations);
+    libeartion_memoire_graphe_contraintes(un_graphe);
 
     return 0;
 }
