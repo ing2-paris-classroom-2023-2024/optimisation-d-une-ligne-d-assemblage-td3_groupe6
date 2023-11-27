@@ -12,10 +12,16 @@ typedef struct arc{
     struct arc* arc_suivant;
 }t_arc;
 
+typedef struct op{
+    int numero;
+    int temps_cycle;
+    int station;
+}t_operation;
+
 typedef struct station {
     int val_station;
+    t_operation **tab_operation;
     int marquage;
-    int *tab_operations;
     int nb_operations;
     int degre;
     t_arc *voisins;
@@ -51,6 +57,7 @@ void Affichage_stations(t_graphe* un_graphe);
 void liberation_memoire_graphe_stations(t_graphe *un_graphe);
 void libeartion_memoire_graphe_contraintes(t_graphe *un_graphe);
 t_graphe *init_graphe_station(int nb_stations);
+t_operation *creer_operation(int num_operation);
 
 
 #endif //OPTIMISATION_D_UNE_LIGNE_D_ASSEMBLAGE_TD3_GROUPE6_ELIOTT_H

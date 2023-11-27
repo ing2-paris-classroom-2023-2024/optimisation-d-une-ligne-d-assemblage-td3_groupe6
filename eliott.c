@@ -223,53 +223,6 @@ t_graphe *init_graphe_station(int nb_stations){
 
 }
 
-t_graphe *creation_graphe_stations(t_graphe* graphe_exclusion){
-
-
-    t_graphe *graphe_stations = init_graphe_station(graphe_exclusion->nb_stations);
-    graphe_stations->num_operation_max = graphe_exclusion->num_operation_max;
-
-    for(int i = 0; i < graphe_stations->nb_stations;i++){
-        graphe_stations->tab_stations[i]->tab_operations = malloc(graphe_exclusion->num_operation_max * sizeof(int));
-        for(int j = 0; j < graphe_exclusion->num_operation_max;j++){
-
-            if(j == 0)
-                continue;
-
-            if(graphe_exclusion->tab_stations[j]->couleur == i){
-                graphe_stations->tab_stations[i]->nb_operations++;
-            }
-        }
-    }
-
-    for(int i = 0; i < graphe_stations->nb_stations;i++){
-        for(int j = 0; j < graphe_exclusion->num_operation_max;j++){
-            graphe_stations->tab_stations[i]->tab_operations[j] = -1;
-        }
-    }
-
-    for(int i = 0; i < graphe_stations->nb_stations;i++){
-        for(int j = 0; j < graphe_exclusion->num_operation_max;j++){
-
-            if(j == 0)
-                continue;
-
-            if(graphe_exclusion->tab_stations[j]->couleur == i){
-                graphe_stations->tab_stations[i]->tab_operations[j] = j;
-            }
-        }
-    }
-
-    int i = 0;
-
-    while(i < graphe_stations->nb_stations - 1){
-        graphe_stations->tab_stations = CreerArete(graphe_stations->tab_stations, i, i + 1);
-        i++;
-    }
-
-    return graphe_stations;
-}
-
 void afficher_successeurs(t_station** sommet, int num)
 {
 
@@ -296,12 +249,13 @@ void graphe_afficher(t_graphe* graphe)
 }
 
 void Affichage_stations(t_graphe* un_graphe){
-    printf("\n-----------------------Graphe de stations-----------------------\n");
+    printf("\n*********************** Graphe de stations **********************\n\n");
 
     for(int i = 0; i < un_graphe->nb_stations;i++){
         t_arc *temp = un_graphe->tab_stations[i]->voisins;
-        printf("station %d : \n", i);
-        printf("reliee vers station : ");
+        printf("\n----------------------\n");
+        printf("|  STATION %d : \n", i);
+        printf("|  reliee vers station : ");
 
         if(temp == NULL)
             printf("station de fin");
@@ -311,12 +265,16 @@ void Affichage_stations(t_graphe* un_graphe){
             temp = temp->arc_suivant;
         }
 
-        printf("\noperations executees : ");
+        printf("\n|  operations executees : ");
         for(int j = 0; j < un_graphe->num_operation_max;j++){
-            if(un_graphe->tab_stations[i]->tab_operations[j] > 0)
-                printf("[%d]", un_graphe->tab_stations[i]->tab_operations[j]);
+            if(un_graphe->tab_stations[i]->tab_operation[j]->numero > 0)
+                printf("[%d]", un_graphe->tab_stations[i]->tab_operation[j]->numero);
         }
-        printf("\n\n");
+        printf("\n----------------------\n");
+        printf("          |\n"
+               "          |\n"
+               "          |\n"
+               "          |");
     }
 }
 
@@ -337,6 +295,7 @@ void DFS(t_graphe *un_graphe, t_graphe * sous_graphe, int s){
 }
 
 void ColorationGlouton(t_graphe* graphe){
+
     // Créer un tableau d'indices pour représenter l'ordre des sommets
     int* indices = (int*)malloc(graphe->num_operation_max * sizeof(int));
     for(int i = 0; i < graphe->num_operation_max; i++){
@@ -423,13 +382,63 @@ int nb_mini_stations_exclu(t_graphe *un_graphe){
     return nb_stations + 1;
 }
 
+t_graphe *creation_graphe_stations(t_graphe* graphe_exclusion){
+
+
+    t_graphe *graphe_stations = init_graphe_station(graphe_exclusion->nb_stations);
+    graphe_stations->num_operation_max = graphe_exclusion->num_operation_max;
+
+    for(int i = 0; i < graphe_stations->nb_stations;i++){
+        graphe_stations->tab_stations[i]->tab_operation = malloc(graphe_exclusion->num_operation_max * sizeof(t_operation*));
+        for(int j = 0; j < graphe_exclusion->num_operation_max;j++){
+            graphe_stations->tab_stations[i]->tab_operation[j] = creer_operation(i);
+            if(j == 0)
+                continue;
+
+            if(graphe_exclusion->tab_stations[j]->couleur == i){
+                graphe_stations->tab_stations[i]->nb_operations++;
+            }
+        }
+    }
+
+    for(int i = 0; i < graphe_stations->nb_stations;i++){
+        for(int j = 0; j < graphe_exclusion->num_operation_max;j++){
+            graphe_stations->tab_stations[i]->tab_operation[j]->numero = -1;
+        }
+    }
+
+    for(int i = 0; i < graphe_stations->nb_stations;i++){
+        for(int j = 0; j < graphe_exclusion->num_operation_max;j++){
+
+            if(j == 0)
+                continue;
+
+            if(graphe_exclusion->tab_stations[j]->couleur == i){
+                graphe_stations->tab_stations[i]->tab_operation[j]->numero = j;
+                graphe_stations->tab_stations[i]->tab_operation[j]->station = i;
+            }
+        }
+    }
+
+    int i = 0;
+
+    while(i < graphe_stations->nb_stations - 1){
+        graphe_stations->tab_stations = CreerArete(graphe_stations->tab_stations, i, i + 1);
+        i++;
+    }
+
+    return graphe_stations;
+}
+
 void liberation_memoire_graphe_stations(t_graphe *un_graphe){
 
     for(int i = 0; i < un_graphe->nb_stations;i++){
-        un_graphe->tab_stations[i]->tab_operations = NULL;
+        un_graphe->tab_stations[i]->tab_operation = NULL;
         free(un_graphe->tab_stations[i]->voisins);
         free(un_graphe->tab_stations[i]);
+        free(un_graphe->tab_stations[i]->tab_operation);
     }
+
 
     un_graphe->matrice_exclusions = NULL;
     free(un_graphe->tab_stations);
@@ -438,7 +447,7 @@ void liberation_memoire_graphe_stations(t_graphe *un_graphe){
 
 void libeartion_memoire_graphe_contraintes(t_graphe *un_graphe){
     for(int i = 0; i < un_graphe->num_operation_max;i++){
-        un_graphe->tab_stations[i]->tab_operations = NULL;
+        un_graphe->tab_stations[i]->tab_operation = NULL;
         un_graphe->tab_stations[i]->voisins = NULL;
         free(un_graphe->tab_stations[i]);
     }
@@ -447,5 +456,19 @@ void libeartion_memoire_graphe_contraintes(t_graphe *un_graphe){
     free(un_graphe->sous_sommets);
     free(un_graphe->tab_stations);
     free(un_graphe);
+}
+
+t_operation *creer_operation(int num_operation){
+    t_operation *nv_operation = malloc(sizeof(t_operation));
+
+    if(nv_operation == NULL){
+        printf("erreur alloc nv_operation.\n");
+    }
+
+    nv_operation->numero = num_operation;
+    nv_operation->station = 0;
+    nv_operation->temps_cycle = 0;
+
+    return nv_operation;
 }
 
