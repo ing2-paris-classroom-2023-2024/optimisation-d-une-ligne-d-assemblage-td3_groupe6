@@ -57,6 +57,7 @@ void Affichage_stations(t_graphe* un_graphe);
 void liberation_memoire_graphe_stations(t_graphe *un_graphe);
 void libeartion_memoire_graphe_contraintes(t_graphe *un_graphe);
 t_graphe *init_graphe_station(int nb_stations);
+int compareDegre(const void* a, const void* b);
 t_operation *creer_operation(int num_operation);
 
 

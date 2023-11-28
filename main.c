@@ -10,7 +10,6 @@ int main(void){
 
     nombre_operations = nb_operations("../operations.txt");
     nb_op_max = num_opeartion_max("../operations.txt");
-    //printf("op max : %d, nombre op : %d\n", nb_op_max, nombre_operations);
 
     t_graphe *un_graphe = creer_graphe(nb_op_max);
 
@@ -18,11 +17,6 @@ int main(void){
 
     un_graphe = fichier_exclusion("../exclusion.txt", un_graphe);
     un_graphe->nb_stations = nb_mini_stations_exclu(un_graphe);
-
-    /*printf("\ngraphe avec couleurs de chaque operation : \n");
-    printf("NB STATIONS REQUISES : %d\n",un_graphe->nb_stations);
-    printf("graphe d'exclusion\n");
-    graphe_afficher(un_graphe);*/
 
     t_graphe * stations = creation_graphe_stations(un_graphe);
 
