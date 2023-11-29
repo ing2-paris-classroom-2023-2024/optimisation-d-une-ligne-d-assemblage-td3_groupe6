@@ -471,4 +471,3 @@ t_operation *creer_operation(int num_operation){
 
     return nv_operation;
 }
-

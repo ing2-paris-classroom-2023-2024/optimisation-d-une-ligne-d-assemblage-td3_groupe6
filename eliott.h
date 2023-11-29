@@ -26,6 +26,8 @@ typedef struct station {
     int degre;
     t_arc *voisins;
     int couleur;
+    int numeroStation;
+    int choixStation;
 }t_station;
 
 typedef struct graphe {
@@ -59,6 +61,6 @@ void libeartion_memoire_graphe_contraintes(t_graphe *un_graphe);
 t_graphe *init_graphe_station(int nb_stations);
 int compareDegre(const void* a, const void* b);
 t_operation *creer_operation(int num_operation);
-
+t_graphe *creerGraphePrecedencce(int ordre);
 
 #endif //OPTIMISATION_D_UNE_LIGNE_D_ASSEMBLAGE_TD3_GROUPE6_ELIOTT_H
