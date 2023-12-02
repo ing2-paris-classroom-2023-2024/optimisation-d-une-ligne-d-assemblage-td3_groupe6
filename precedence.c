@@ -112,25 +112,32 @@ void debutParcoursBfs(t_graphe* graphe){
             sommetInitial[i] = 0;
         }
     }
-    for (int i = sommetMin; i < graphe->num_operation_max; ++i) {
-        if (sommetInitial[i] == 1){
-            graphe->tab_stations[i]->numeroStation = 0;
-            if (qualite <= parcoursBFS(graphe,i,1)){
-                qualite = parcoursBFS(graphe,i,1);
-                meilleurSommet = i;
-            }
+
+    graphe->nb_stations++;
+    t_station stationInitiale ;
+
+    stationInitiale.val_station = 0;
+    graphe->tab_perations_reelles[stationInitiale.val_station] = 1;
+    stationInitiale.couleur = 0;
+    stationInitiale.marquage = 0;
+    stationInitiale.degre = 0;
+    stationInitiale.nb_operations = 0;
+    stationInitiale.voisins = NULL;
+
+    for (int i = stationInitiale.val_station; i < graphe->num_operation_max; ++i) {
+        if (sommetInitial[i]==1){
+            graphe->tab_stations = CreerArete(graphe->tab_stations, stationInitiale.val_station, i);
+            graphe->tab_stations[stationInitiale.val_station]->degre++;
         }
     }
+
+    parcoursBFS(graphe,stationInitiale.val_station,1);
+
     for (int i = sommetMin; i < graphe->num_operation_max; ++i) {
-        graphe->tab_stations[i]->numeroStation = -1;
-    }
-    graphe->tab_stations[meilleurSommet]->numeroStation = 0;
-    parcoursBFS(graphe,meilleurSommet,1);
-    for (int i = sommetMin; i < graphe->num_operation_max; ++i) {
-        if (sommetInitial[i] == 1)
-            graphe->tab_stations[i]->numeroStation = 0;
-        if (graphe->tab_perations_reelles[sommetMin] == 1)
-            printf("operation %d station %d\n",i,graphe->tab_stations[i]->numeroStation);
+        if (graphe->tab_perations_reelles[i] == 1) {
+            graphe->tab_stations[i]->numeroStation--;
+            printf("\noperation %d station %d", i, graphe->tab_stations[i]->numeroStation );
+        }
     }
 }
 
@@ -152,7 +159,7 @@ int parcoursBFS(t_graphe * graphe, int numSommetInitial, int modeAffichage){
         graphe->tab_stations[i]->couleur='B';
         preds[i] = -1;
     }
-    if (modeAffichage) preds[numSommetInitial]= 0;
+    if (modeAffichage) preds[numSommetInitial]= -1;
 
     if (modeAffichage) {
         printf("\n******* PARCOURS BFS - Ordre de decouverte des sommets depuis (%d) *******\n", numSommetInitial);
@@ -166,17 +173,13 @@ int parcoursBFS(t_graphe * graphe, int numSommetInitial, int modeAffichage){
             t_arc *Temparc=graphe->tab_stations[i]->voisins;
             if(Temparc!=NULL){
                 enfiler(listeSommets,Temparc->num_station);
-                if (preds[Temparc->num_station] == -1) {
-                    preds[Temparc->num_station] = i;
-                    if (modeAffichage)
-                        printf(" ;\t%d ----> %d",i,Temparc->num_station);
-                }
+                preds[Temparc->num_station] = i;
+                if (modeAffichage)
+                    printf(" ;\t%d ----> %d",i,Temparc->num_station);
                 while(Temparc->arc_suivant!=NULL){
-                    if (preds[Temparc->arc_suivant->num_station] == -1){
-                        preds[Temparc->arc_suivant->num_station] = i;
-                        if (modeAffichage)
-                            printf(" ;\t%d ----> %d",i,Temparc->arc_suivant->num_station);
-                    }
+                    preds[Temparc->arc_suivant->num_station] = i;
+                    if (modeAffichage)
+                        printf(" ;\t%d ----> %d",i,Temparc->arc_suivant->num_station);
                     Temparc=Temparc->arc_suivant;
                     enfiler(listeSommets,Temparc->num_station);
                 }
@@ -187,7 +190,7 @@ int parcoursBFS(t_graphe * graphe, int numSommetInitial, int modeAffichage){
     }
     int station = 0;
     int fin = 0;
-    
+
     while (fin == 0){
         fin = 1;
         for (int j = 0; j < graphe->num_operation_max; ++j) {
