@@ -5,10 +5,10 @@
 
 int* creation_tab_op_reelles(char *nom_fichier, t_graphe* un_graphe){
     FILE *fp = fopen(nom_fichier,"r");
-    un_graphe->tab_perations_reelles = malloc((un_graphe->num_operation_max) * sizeof(int));
+    un_graphe->tab_operations_reelles = malloc((un_graphe->num_operation_max) * sizeof(int));
 
     for(int i = 0; i < un_graphe->num_operation_max;i++){
-        un_graphe->tab_perations_reelles[i] = -1;
+        un_graphe->tab_operations_reelles[i] = -1;
     }
 
     if(fp == NULL){
@@ -20,10 +20,10 @@ int* creation_tab_op_reelles(char *nom_fichier, t_graphe* un_graphe){
     float temps = 0;
 
     while(fscanf(fp,"%d%f",&op,&temps) == 2){
-        un_graphe->tab_perations_reelles[op] = 1;
+        un_graphe->tab_operations_reelles[op] = 1;
     }
 
-    return un_graphe->tab_perations_reelles;
+    return un_graphe->tab_operations_reelles;
 }
 
 
@@ -268,7 +268,7 @@ void Affichage_stations(t_graphe* un_graphe){
         printf("\n|  operations executees : ");
         for(int j = 0; j < un_graphe->num_operation_max;j++){
             if(un_graphe->tab_stations[i]->tab_operation[j]->numero > 0)
-                printf("[%d]", un_graphe->tab_stations[i]->tab_operation[j]->numero);
+                printf("[%d](%.2fs) ", un_graphe->tab_stations[i]->tab_operation[j]->numero, un_graphe->tab_stations[i]->tab_operation[j]->temps_ope);
         }
         printf("\n----------------------\n");
         printf("          |\n"
@@ -359,7 +359,7 @@ int nb_mini_stations_exclu(t_graphe *un_graphe){
             un_graphe->sous_sommets[i] = -1;
         }
 
-        if(un_graphe->tab_stations[c]->marquage == 1 || un_graphe->tab_perations_reelles[c] < 0 || un_graphe->tab_stations[c]->voisins == NULL)
+        if(un_graphe->tab_stations[c]->marquage == 1 || un_graphe->tab_operations_reelles[c] < 0 || un_graphe->tab_stations[c]->voisins == NULL)
             continue;
 
         else {
@@ -382,38 +382,52 @@ int nb_mini_stations_exclu(t_graphe *un_graphe){
     return nb_stations + 1;
 }
 
-t_graphe *creation_graphe_stations(t_graphe* graphe_exclusion){
+t_graphe *creation_graphe_stations_exclusion(t_graphe* un_graphe, char * file_name, char* temps_cycle){
 
 
-    t_graphe *graphe_stations = init_graphe_station(graphe_exclusion->nb_stations);
-    graphe_stations->num_operation_max = graphe_exclusion->num_operation_max;
+    t_graphe *graphe_stations = init_graphe_station(un_graphe->nb_stations);
+    graphe_stations->num_operation_max = un_graphe->num_operation_max;
+
+    graphe_stations->tab_operations_reelles = malloc(graphe_stations->num_operation_max * sizeof(int));
+    graphe_stations->tab_operations_reelles = un_graphe->tab_operations_reelles;
 
     for(int i = 0; i < graphe_stations->nb_stations;i++){
-        graphe_stations->tab_stations[i]->tab_operation = malloc(graphe_exclusion->num_operation_max * sizeof(t_operation*));
-        for(int j = 0; j < graphe_exclusion->num_operation_max;j++){
-            graphe_stations->tab_stations[i]->tab_operation[j] = creer_operation(i);
+        //printf("station %d cree\n", graphe_stations->tab_stations[i]->val_station);
+        graphe_stations->tab_stations[i]->tab_operation = malloc(un_graphe->num_operation_max * sizeof(t_operation*));
+
+        for(int j = 0; j < un_graphe->num_operation_max; j++){
+
+            graphe_stations->tab_stations[i]->tab_operation[j] = creer_operation(j);
+            //printf("operation : %d ajoutee\n", graphe_stations->tab_stations[i]->tab_operation[j]->numero);
+
             if(j == 0)
                 continue;
 
-            if(graphe_exclusion->tab_stations[j]->couleur == i){
+            if(un_graphe->tab_operations_reelles[j] < 0)
+                continue;
+
+            if(un_graphe->tab_stations[j]->couleur == i){
                 graphe_stations->tab_stations[i]->nb_operations++;
             }
         }
     }
 
     for(int i = 0; i < graphe_stations->nb_stations;i++){
-        for(int j = 0; j < graphe_exclusion->num_operation_max;j++){
+        for(int j = 0; j < un_graphe->num_operation_max; j++){
             graphe_stations->tab_stations[i]->tab_operation[j]->numero = -1;
         }
     }
 
     for(int i = 0; i < graphe_stations->nb_stations;i++){
-        for(int j = 0; j < graphe_exclusion->num_operation_max;j++){
+        for(int j = 0; j < un_graphe->num_operation_max; j++){
 
             if(j == 0)
                 continue;
 
-            if(graphe_exclusion->tab_stations[j]->couleur == i){
+            if(un_graphe->tab_operations_reelles[j] < 0)
+                continue;
+
+            if(un_graphe->tab_stations[j]->couleur == i){
                 graphe_stations->tab_stations[i]->tab_operation[j]->numero = j;
                 graphe_stations->tab_stations[i]->tab_operation[j]->station = i;
             }
@@ -426,6 +440,8 @@ t_graphe *creation_graphe_stations(t_graphe* graphe_exclusion){
         graphe_stations->tab_stations = CreerArete(graphe_stations->tab_stations, i, i + 1);
         i++;
     }
+
+    graphe_stations = lire_temps_cycle(graphe_stations, file_name, temps_cycle);
 
     return graphe_stations;
 }
@@ -467,8 +483,176 @@ t_operation *creer_operation(int num_operation){
 
     nv_operation->numero = num_operation;
     nv_operation->station = 0;
-    nv_operation->temps_cycle = 0;
+    nv_operation->temps_ope = 0;
 
     return nv_operation;
+}
+
+t_graphe* lire_temps_cycle(t_graphe* un_graphe, char *nom_fichier, char* temps_cycle){
+    FILE *fp = fopen(nom_fichier, "r");
+    FILE *f_temps = fopen(temps_cycle, "r");
+
+    if(!f_temps){
+        printf("erreur ouverture fichier temps de cycle");
+        exit(1);
+    }
+
+    if (!fp){
+        printf("erreur ouverture fichier operations dans temps cycle\n");
+        exit(1);
+    }
+
+    float temps = 0;
+    int entier = 0;
+
+    for(int i = 0; i < un_graphe->nb_stations; i++){
+        fseek(fp, 0, SEEK_SET);
+        fflush(stdin);
+        while(fscanf(fp, "%d %f", &entier, &temps) == 2){
+            if(un_graphe->tab_stations[i]->tab_operation[entier]->numero != -1){
+                un_graphe->tab_stations[i]->tab_operation[entier]->temps_ope = temps;
+            }
+        }
+    }
+
+    float temps_C = 0;
+
+    fscanf(f_temps,"%f",&temps_C);
+
+    un_graphe->temps_cycle = temps_C;
+
+    return un_graphe;
+}
+
+int nb_nv_stations_necessaires_exclusion_temps(t_graphe* graphe_exclusion){
+    float temps_actuel = 0;
+    int nb_nv_stations = 0;
+    float temps_cycle = graphe_exclusion->temps_cycle;
+
+    for(int i = 0; i < graphe_exclusion->nb_stations;i++){
+        temps_actuel = 0;
+        for(int j = 0; j < graphe_exclusion->num_operation_max;j++){
+
+            if(graphe_exclusion->tab_stations[i]->tab_operation[j]->numero < 0)
+                continue;
+
+            if(temps_actuel + graphe_exclusion->tab_stations[i]->tab_operation[j]->temps_ope > temps_cycle){
+                nb_nv_stations++;
+                temps_actuel = 0;
+                printf("----------------------------\n");
+                temps_actuel = temps_actuel + graphe_exclusion->tab_stations[i]->tab_operation[j]->temps_ope;
+                //printf("operation %d terminee a : %.2fs\n", graphe_exclusion->tab_stations[i]->tab_operation[j]->numero, temps_actuel);
+            }
+
+            else{
+                temps_actuel = temps_actuel + graphe_exclusion->tab_stations[i]->tab_operation[j]->temps_ope;
+                //printf("operation %d terminee a : %.2fs\n", graphe_exclusion->tab_stations[i]->tab_operation[j]->numero, temps_actuel);
+            }
+        }
+    }
+
+    return nb_nv_stations;
+}
+
+t_graphe *creation_stations_temps_exclusion(t_graphe *un_graphe, int nv_stations){
+    t_graphe *graphe_stations = init_graphe_station(un_graphe->nb_stations + nv_stations);
+    graphe_stations->num_operation_max = un_graphe->num_operation_max;
+
+    graphe_stations->tab_operations_reelles = malloc(graphe_stations->num_operation_max * sizeof(int));
+    graphe_stations->tab_operations_reelles = un_graphe->tab_operations_reelles;
+
+    for(int i = 0; i < graphe_stations->nb_stations;i++){
+        //printf("station %d cree\n", graphe_stations->tab_stations[i]->val_station);
+        graphe_stations->tab_stations[i]->tab_operation = malloc(un_graphe->num_operation_max * sizeof(t_operation*));
+
+        for(int j = 0; j < un_graphe->num_operation_max; j++){
+            graphe_stations->tab_stations[i]->tab_operation[j] = creer_operation(j);
+            //printf("operation : %d ajoutee\n", graphe_stations->tab_stations[i]->tab_operation[j]->numero);
+        }
+    }
+
+    for(int i = 0; i < graphe_stations->nb_stations;i++){
+        for(int j = 0; j < un_graphe->num_operation_max; j++){
+            graphe_stations->tab_stations[i]->tab_operation[j]->numero = -1;
+        }
+    }
+
+    int i = 0;
+
+    while(i < graphe_stations->nb_stations - 1){
+        graphe_stations->tab_stations = CreerArete(graphe_stations->tab_stations, i, i + 1);
+        i++;
+    }
+
+    for(int j = 0; j < un_graphe->nb_stations;j++){
+        graphe_stations->tab_stations[j] = un_graphe->tab_stations[j];
+    }
+
+    graphe_stations->num_operation_max = un_graphe->num_operation_max;
+    graphe_stations->temps_cycle = un_graphe->temps_cycle;
+
+    return graphe_stations;
+}
+
+t_graphe* associer_operations_exclusion_temps(t_graphe* graphe_exclusion_temps, int nv_stations){
+    float temps_actuel = 0;
+    float temps_cycle = graphe_exclusion_temps->temps_cycle;
+    int nb_nv_stations = 0;
+    int* tab_stockage = malloc(graphe_exclusion_temps->num_operation_max * sizeof(int));
+    int station_choix = graphe_exclusion_temps->nb_stations - nv_stations;
+    printf("premire station libre : %d\n", nv_stations);
+    printf("graphe_exclu nb stations : %d\n", graphe_exclusion_temps->nb_stations);
+    printf("DIFFERENCE  : %d\n", (graphe_exclusion_temps->nb_stations - nv_stations));
+
+    for(int i = 0; i < graphe_exclusion_temps->num_operation_max; i++){
+        tab_stockage[i] = -1;
+    }
+
+    for(int i = 0; i <= (graphe_exclusion_temps->nb_stations - nv_stations); i++){
+        temps_actuel = 0;
+
+        for(int v = 0; v < graphe_exclusion_temps->num_operation_max; v++){
+            tab_stockage[v] = -1;
+        }
+
+        printf("difference : %d\n", graphe_exclusion_temps->nb_stations - nv_stations);
+        printf("station actuelle : %d\n", i);
+        //printf("--------------dans station %d : --------------\n", nv_stations);
+        for(int j = 0; j < graphe_exclusion_temps->num_operation_max; j++){
+
+
+
+            if(graphe_exclusion_temps->tab_stations[i]->tab_operation[j]->numero < 0 || j == 0)
+                continue;
+
+            if(temps_actuel + graphe_exclusion_temps->tab_stations[i]->tab_operation[j]->temps_ope > temps_cycle){
+                printf("\ndans station : %d\n", station_choix);
+                for(int c = 0; c < graphe_exclusion_temps->num_operation_max;c++){
+                    if(tab_stockage[c] >= 0){
+                        printf("[%d]", tab_stockage[c]);
+                        graphe_exclusion_temps->tab_stations[station_choix]->tab_operation[c]->numero = tab_stockage[c];
+                        graphe_exclusion_temps->tab_stations[station_choix]->tab_operation[c]->temps_ope = graphe_exclusion_temps->tab_stations[i]->tab_operation[c]->temps_ope;
+                        graphe_exclusion_temps->tab_stations[i]->tab_operation[c]->numero = -1;
+                    }
+
+                }
+
+                for(int v = 0; v < graphe_exclusion_temps->num_operation_max; v++){
+                    tab_stockage[v] = -1;
+                }
+
+                temps_actuel = 0;
+                temps_actuel = temps_actuel + graphe_exclusion_temps->tab_stations[i]->tab_operation[j]->temps_ope;
+                station_choix++;
+            }
+
+            else{
+                temps_actuel = temps_actuel + graphe_exclusion_temps->tab_stations[i]->tab_operation[j]->temps_ope;
+                tab_stockage[j] = graphe_exclusion_temps->tab_stations[i]->tab_operation[j]->numero;
+                //printf("operation %d terminee a : %.2fs\n", graphe_exclusion_temps->tab_stations[i]->tab_operation[j]->numero, temps_actuel);
+            }
+        }
+    }
+    return graphe_exclusion_temps;
 }
 
