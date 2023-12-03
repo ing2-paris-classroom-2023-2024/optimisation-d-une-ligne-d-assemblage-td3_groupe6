@@ -72,3 +72,8 @@ void graphColoring(int graph[MAX_VERTICES][MAX_VERTICES], int m, int V) {
         printColoring(coloring, V);
     }
 }
+
+typedef struct Node {
+    int data;
+    struct Node* next;
+} Node;
