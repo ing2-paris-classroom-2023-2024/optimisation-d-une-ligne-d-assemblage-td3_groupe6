@@ -1,7 +1,7 @@
 //
 // Created by eliot on 23/11/2023.
 //
-#include "eliott.h"
+#include "exclusion.h"
 
 int* creation_tab_op_reelles(char *nom_fichier, t_graphe* un_graphe){
     FILE *fp = fopen(nom_fichier,"r");

@@ -2,7 +2,7 @@
 // Created by eliot on 23/11/2023.
 //
 
-#include "eliott.h"
+#include "exclusion.h"
 
 int main(void){
     int nombre_operations = 0;
