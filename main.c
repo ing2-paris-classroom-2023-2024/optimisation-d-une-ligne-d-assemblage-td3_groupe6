@@ -3,7 +3,7 @@
 //
 
 #include <stdio.h>
-
+#include <stdlib.h>
 
 int main() {
     int a = 0;
@@ -84,3 +84,9 @@ typedef struct Graph {
 } Graph;
 
 Node* createNode(int data) {
+    Node* newNode = (Node*)malloc(sizeof(Node));
+    newNode->data = data;
+    newNode->next = NULL;
+    return newNode;
+}
+}
