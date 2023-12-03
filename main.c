@@ -82,3 +82,5 @@ typedef struct Graph {
     int V; // Nombre de sommets
     Node** adjList; // Liste d'adjacence
 } Graph;
+
+Node* createNode(int data) {
