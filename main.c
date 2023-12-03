@@ -77,3 +77,8 @@ typedef struct Node {
     int data;
     struct Node* next;
 } Node;
+
+typedef struct Graph {
+    int V; // Nombre de sommets
+    Node** adjList; // Liste d'adjacence
+} Graph;
