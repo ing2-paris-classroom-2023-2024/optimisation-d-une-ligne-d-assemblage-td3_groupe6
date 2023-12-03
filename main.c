@@ -2,7 +2,7 @@
 // Created by eliot on 23/11/2023.
 //
 
-#include "eliott.h"
+#include "exclusion.h"
 #include "precedence.h"
 
 int main(void){
@@ -23,9 +23,7 @@ int main(void){
 
     t_graphe * stations = creation_graphe_stations(un_graphe);
     debutParcoursBfs(graphePreccedence);
-    //parcoursBFS(graphePreccedence,28,5,1);
-    //Affichage_stations(stations);
-    //graphe_afficher(graphePreccedence);
+    Affichage_stations(stations);
 
     free(un_graphe->tab_perations_reelles);
     liberation_memoire_graphe_stations(stations);

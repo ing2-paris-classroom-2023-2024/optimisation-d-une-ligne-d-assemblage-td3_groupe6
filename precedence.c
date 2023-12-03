@@ -1,4 +1,4 @@
-#include "eliott.h"
+#include "exclusion.h"
 #include "precedence.h"
 
 pFile initialisationFileVide() {
@@ -134,11 +134,33 @@ void debutParcoursBfs(t_graphe* graphe){
     parcoursBFS(graphe,stationInitiale.val_station,1);
 
     for (int i = sommetMin; i < graphe->num_operation_max; ++i) {
-        if (graphe->tab_perations_reelles[i] == 1) {
-            graphe->tab_stations[i]->numeroStation--;
-            printf("\noperation %d station %d", i, graphe->tab_stations[i]->numeroStation );
-        }
+        graphe->tab_stations[i]->choixStation = 0;
     }
+
+    int fin = 0;
+    int station = 1;
+    printf("\n\nStation avec contrainte de precedence : \n\n");
+    while (fin == 0){
+        printf("\n----------------------------------------------------------------------------------------\n\t\t\tstation %d\n",station-1);
+        fin = 1;
+        for (int i = sommetMin; i < graphe->num_operation_max; ++i) {
+            if (graphe->tab_perations_reelles[i] == 1) {
+                if (graphe->tab_stations[i]->numeroStation == station){
+                    graphe->tab_stations[i]->numeroStation--;
+                    printf(" %d\t", i);
+                    graphe->tab_stations[i]->choixStation=1;
+                }
+            }
+        }
+        for (int i = sommetMin; i < graphe->num_operation_max; ++i) {
+            if (graphe->tab_perations_reelles[i] == 1) {
+                if (graphe->tab_stations[i]->choixStation == 0)
+                    fin = 0;
+            }
+        }
+        station++;
+    }
+    printf("\n\n");
 }
 
 int parcoursBFS(t_graphe * graphe, int numSommetInitial, int modeAffichage){
@@ -161,10 +183,6 @@ int parcoursBFS(t_graphe * graphe, int numSommetInitial, int modeAffichage){
     }
     if (modeAffichage) preds[numSommetInitial]= -1;
 
-    if (modeAffichage) {
-        printf("\n******* PARCOURS BFS - Ordre de decouverte des sommets depuis (%d) *******\n", numSommetInitial);
-        printf("\t%d", numSommetInitial);
-    }
     enfiler(listeSommets, numSommetInitial);
 
     while(longueurDeLaFile(listeSommets)){
@@ -175,16 +193,13 @@ int parcoursBFS(t_graphe * graphe, int numSommetInitial, int modeAffichage){
                 enfiler(listeSommets,Temparc->num_station);
                 preds[Temparc->num_station] = i;
                 if (modeAffichage)
-                    printf(" ;\t%d ----> %d",i,Temparc->num_station);
                 while(Temparc->arc_suivant!=NULL){
                     preds[Temparc->arc_suivant->num_station] = i;
                     if (modeAffichage)
-                        printf(" ;\t%d ----> %d",i,Temparc->arc_suivant->num_station);
                     Temparc=Temparc->arc_suivant;
                     enfiler(listeSommets,Temparc->num_station);
                 }
             }
-            //printf("(%d) ",graphe->pSommet[i]->valeur);
             graphe->tab_stations[i]->couleur='N';
         }
     }
@@ -209,48 +224,8 @@ int parcoursBFS(t_graphe * graphe, int numSommetInitial, int modeAffichage){
         }
         station++;
     }
-
-/*
-    if (modeAffichage) {
-        printf("\nIl n y aucun chemin du sommet (%d) vers les sommets suivants : ", numSommetInitial);
-        for (int j = 0; j < graphe->num_operation_max; ++j) {
-            if ((preds[j] == -1) && (j != numSommetInitial))
-                printf("%d ; ", j);
-        }
-        if (preds[numSommetFinal] == -1)
-            printf("\nIl n y a aucun chemin pour aller au sommet (%d) depuis le sommet (%d)", numSommetFinal,
-                   numSommetInitial);
-        else {
-            int numSommetParcouru = numSommetFinal;
-            printf("\nChemin BFS pour aller au sommet (%d) depuis le sommet (%d) : %d", numSommetFinal,
-                   numSommetInitial, numSommetParcouru);
-            while (numSommetParcouru != numSommetInitial) {
-                printf(" <---- %d ", preds[numSommetParcouru]);
-                numSommetParcouru = preds[numSommetParcouru];
-            }
-        }
-    }*/
     return station;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 t_graphe *creerGraphePrecedencce(int ordre){
     t_graphe * graphePrecedence;

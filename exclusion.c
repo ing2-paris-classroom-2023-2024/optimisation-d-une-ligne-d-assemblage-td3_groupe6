@@ -1,7 +1,7 @@
 //
 // Created by eliot on 23/11/2023.
 //
-#include "eliott.h"
+#include "exclusion.h"
 
 int* creation_tab_op_reelles(char *nom_fichier, t_graphe* un_graphe){
     FILE *fp = fopen(nom_fichier,"r");
@@ -249,6 +249,7 @@ void graphe_afficher(t_graphe* graphe)
 }
 
 void Affichage_stations(t_graphe* un_graphe){
+    printf("\n\n Station avec contrainte exclusion :");
     printf("\n*********************** Graphe de stations **********************\n\n");
 
     for(int i = 0; i < un_graphe->nb_stations;i++){
