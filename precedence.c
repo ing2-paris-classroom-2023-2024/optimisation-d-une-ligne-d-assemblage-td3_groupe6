@@ -86,16 +86,19 @@ void debutParcoursBfs(t_graphe* graphe){
     int sommetMin = 0;
     int meilleurSommet = 0;
     int qualite = 0;
-    while (graphe->tab_perations_reelles[sommetMin] != 1){
+
+    while (graphe->tab_operations_reelles[sommetMin] != 1){
         sommetMin++;
     }
+
     int sommetInitial[graphe->num_operation_max];
     for (int i = sommetMin; i < graphe->num_operation_max; ++i) {
         sommetInitial[i]=1;
         graphe->tab_stations[i]->numeroStation = -1;
     }
+
     for (int i = sommetMin; i < graphe->num_operation_max; ++i) {
-        if (graphe->tab_perations_reelles[i] == 1){
+        if (graphe->tab_operations_reelles[i] == 1){
             t_arc *Temparc=graphe->tab_stations[i]->voisins;
             while (Temparc !=NULL){
                 for (int j = 0; j < graphe->num_operation_max; ++j) {
@@ -107,17 +110,18 @@ void debutParcoursBfs(t_graphe* graphe){
             }
         }
     }
+
     for (int i = sommetMin; i < graphe->num_operation_max; ++i) {
-        if (graphe->tab_perations_reelles[i] != 1){
+        if (graphe->tab_operations_reelles[i] != 1){
             sommetInitial[i] = 0;
         }
     }
 
     graphe->nb_stations++;
-    t_station stationInitiale ;
+    t_station stationInitiale;
 
     stationInitiale.val_station = 0;
-    graphe->tab_perations_reelles[stationInitiale.val_station] = 1;
+    graphe->tab_operations_reelles[stationInitiale.val_station] = 1;
     stationInitiale.couleur = 0;
     stationInitiale.marquage = 0;
     stationInitiale.degre = 0;
@@ -144,7 +148,7 @@ void debutParcoursBfs(t_graphe* graphe){
         printf("\n----------------------------------------------------------------------------------------\n\t\t\tstation %d\n",station-1);
         fin = 1;
         for (int i = sommetMin; i < graphe->num_operation_max; ++i) {
-            if (graphe->tab_perations_reelles[i] == 1) {
+            if (graphe->tab_operations_reelles[i] == 1) {
                 if (graphe->tab_stations[i]->numeroStation == station){
                     graphe->tab_stations[i]->numeroStation--;
                     printf(" %d\t", i);
@@ -153,7 +157,7 @@ void debutParcoursBfs(t_graphe* graphe){
             }
         }
         for (int i = sommetMin; i < graphe->num_operation_max; ++i) {
-            if (graphe->tab_perations_reelles[i] == 1) {
+            if (graphe->tab_operations_reelles[i] == 1) {
                 if (graphe->tab_stations[i]->choixStation == 0)
                     fin = 0;
             }
@@ -189,11 +193,11 @@ int parcoursBFS(t_graphe * graphe, int numSommetInitial, int modeAffichage){
         i=defiler(listeSommets);
         if(graphe->tab_stations[i]->couleur=='B'){
             t_arc *Temparc=graphe->tab_stations[i]->voisins;
-            if(Temparc!=NULL){
+            if(Temparc != NULL){
                 enfiler(listeSommets,Temparc->num_station);
                 preds[Temparc->num_station] = i;
                 if (modeAffichage)
-                while(Temparc->arc_suivant!=NULL){
+                while(Temparc->arc_suivant != NULL){
                     preds[Temparc->arc_suivant->num_station] = i;
                     if (modeAffichage)
                     Temparc=Temparc->arc_suivant;
@@ -203,6 +207,7 @@ int parcoursBFS(t_graphe * graphe, int numSommetInitial, int modeAffichage){
             graphe->tab_stations[i]->couleur='N';
         }
     }
+
     int station = 0;
     int fin = 0;
 
