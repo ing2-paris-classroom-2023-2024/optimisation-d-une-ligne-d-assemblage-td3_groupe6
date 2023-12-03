@@ -67,5 +67,6 @@ t_graphe* lire_temps_cycle(t_graphe* un_graphe, char* nom_fichier, char* fichier
 int nb_nv_stations_necessaires_exclusion_temps(t_graphe* graphe_exclusion);
 t_graphe *creation_stations_temps_exclusion(t_graphe *graphe_exclusion_temps, int nv_stations);
 t_graphe* associer_operations_exclusion_temps(t_graphe* graphe_exclusion_temps, int nv_stations);
+void temps_cycle_seul(char *nom_fichier, int nb_op, float temps_cycle);
 
 #endif //OPTIMISATION_D_UNE_LIGNE_D_ASSEMBLAGE_TD3_GROUPE6_ELIOTT_H

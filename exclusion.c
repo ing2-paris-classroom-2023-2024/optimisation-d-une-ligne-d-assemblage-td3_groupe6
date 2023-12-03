@@ -649,3 +649,79 @@ t_graphe* associer_operations_exclusion_temps(t_graphe* graphe_exclusion_temps, 
     return graphe_exclusion_temps;
 }
 
+void temps_cycle_seul(char *nom_fichier, int nb_op, float temps_cycle){
+    FILE * fp = fopen(nom_fichier, "r");
+
+    if(!fp){
+        printf("erreur ouverture fichier\n");
+        exit(1);
+    }
+
+    t_operation *tab = malloc(nb_op * sizeof(t_station));
+
+    if(tab == NULL){
+        printf("erreur allocation tab de station temps de cycle.\n");
+        exit(1);
+    }
+
+    int num_op = 0;
+    float temps = 0;
+
+    for(int i = 0; i < nb_op;i++){
+        tab[i].numero = -1;
+        tab[i].temps_ope = 0;
+        tab[i].station = 0;
+    }
+
+    while(fscanf(fp, "%d %f", &num_op, &temps) == 2){
+        tab[num_op].numero = num_op;
+        tab[num_op].temps_ope = temps;
+    }
+
+    int num_station = 0;
+    float temps_actuel = 0;
+    t_operation tab_stockage[nb_op];
+
+    for(int j = 0; j < nb_op;j++){
+        tab_stockage[j].numero = - 1;
+    }
+
+    int derniere_op = 0;
+
+    for(int i = 0;i < nb_op;i++){
+
+        //temps_actuel = temps_actuel + tab[i].temps_ope;
+
+        if(temps_actuel + tab[i].temps_ope > temps_cycle){
+            printf("\n\n------------------station : %d (%.2fs)--------------------\n", num_station, temps_actuel);
+            for(int c = 0; c < nb_op;c++){
+                if(tab_stockage[c].numero >= 0 /*&& tab[i].station == num_station*/)
+                    printf("operation %d : (%.2fs)\n", tab_stockage[c].numero, tab[c].temps_ope);
+            }
+
+            temps_actuel = tab[i].temps_ope;
+            num_station++;
+
+            for(int j = 0; j < nb_op;j++){
+                tab_stockage[j].numero = - 1;
+            }
+
+            tab_stockage[tab[i].numero].numero = i;
+            derniere_op = i;
+        }
+
+        else{
+            temps_actuel = temps_actuel + tab[i].temps_ope;
+            tab[i].station = num_station;
+            tab_stockage[i].numero = tab[i].numero;
+            derniere_op = i;
+        }
+    }
+
+    printf("\n\n------------------station : %d (%.2fs)--------------------\n", num_station, temps_actuel);
+    for(int i = 0; i < nb_op;i++){
+        if(tab_stockage[i].numero >= 0)
+            printf("operation %d : (%.2fs)\n", tab_stockage[i].numero, tab[i].temps_ope);
+    }
+    printf("\n");
+}
